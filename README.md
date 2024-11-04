@@ -54,7 +54,7 @@ The dataset contains images of military aircraft and corresponding annotations i
 `python3 -m venv venv`
 
 `source venv/bin/activate`
-
+source .\venv\Scripts\activate
 `pip install -r requirements.txt`
 
 `python train.py`

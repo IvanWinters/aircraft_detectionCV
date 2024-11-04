@@ -2,11 +2,13 @@ from torchvision import transforms
 
 def get_transform(train):
     transforms_list = []
+
+    transforms_list.append(transforms.Resize((512, 512)))
     transforms_list.append(transforms.ToTensor())
     if train:
         transforms_list.append(transforms.RandomHorizontalFlip(0.5))
-        # Add more augmentations if needed
     return transforms.Compose(transforms_list)
+
 
 # Class names including background
 classes = [

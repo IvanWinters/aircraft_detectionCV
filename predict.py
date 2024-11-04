@@ -10,6 +10,7 @@ def predict(model, image_path, device, threshold=0.5):
     image = Image.open(image_path).convert("RGB")
     transform = transforms.Compose([transforms.ToTensor()])
     img = transform(image).to(device)
+    
     with torch.no_grad():
         outputs = model([img])
 
@@ -20,25 +21,35 @@ def predict(model, image_path, device, threshold=0.5):
     labels = outputs[0]['labels']
     scores = outputs[0]['scores']
 
+    print(f"Total detections: {len(boxes)}")
+    print(f"Scores: {scores}")
+
     # Filter out low confidence predictions
-    boxes = boxes[scores > threshold]
-    labels = labels[scores > threshold]
-    scores = scores[scores > threshold]
+    high_conf_indices = scores > threshold
+    boxes = boxes[high_conf_indices]
+    labels = labels[high_conf_indices]
+    scores = scores[high_conf_indices]
 
-    # Draw bounding boxes on the image
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.load_default()
+    print(f"Detections above threshold ({threshold}): {len(boxes)}")
 
-    for box, label, score in zip(boxes, labels, scores):
-        xmin, ymin, xmax, ymax = box
-        draw.rectangle(((xmin, ymin), (xmax, ymax)), outline='red', width=2)
-        class_name = idx_to_class[label.item()]
-        draw.text((xmin, ymin - 10), f"{class_name}: {score:.2f}", fill='red', font=font)
+    if len(boxes) == 0:
+        print("No detections above the threshold.")
+    else:
+        # Draw bounding boxes on the image
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.load_default()
+
+        for box, label, score in zip(boxes, labels, scores):
+            xmin, ymin, xmax, ymax = box
+            draw.rectangle(((xmin, ymin), (xmax, ymax)), outline='red', width=2)
+            class_name = idx_to_class.get(label.item(), "Unknown")
+            draw.text((xmin, ymin - 10), f"{class_name}: {score:.2f}", fill='red', font=font)
 
     plt.figure(figsize=(12,8))
     plt.imshow(image)
     plt.axis('off')
     plt.show()
+
 
 if __name__ == "__main__":
     # Use GPU if available
@@ -54,7 +65,7 @@ if __name__ == "__main__":
     model.to(device)
 
     # Path to the image you want to test
-    image_path = 'path_to_your_test_image.jpg'
+    image_path = 'f18.jpg'
 
     # Perform prediction
-    predict(model, image_path, device, threshold=0.5)
+    predict(model, image_path, device, threshold=0.1)
